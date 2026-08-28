@@ -2,11 +2,14 @@ import { useState } from "react";
 import "./index.css";
 import { dimensions, questions, answerOptions } from "./data/questions";
 
+const API_URL = "https://shy-dawn-31acdiagnostico-api.carlos-fe4.workers.dev/api/diagnostico";
+
 export default function App() {
   const [screen, setScreen] = useState("landing");
   const [company, setCompany] = useState({ company: "", contact: "", email: "" });
   const [answers, setAnswers] = useState({});
   const [current, setCurrent] = useState(0);
+  const [saving, setSaving] = useState(false);
 
   const currentQuestion = questions[current];
   const progress = Math.round(((current + 1) / questions.length) * 100);
@@ -29,7 +32,6 @@ export default function App() {
     const maxPossible = questions.length * 5;
     const overallScore = Math.round((totalScore / maxPossible) * 100);
 
-    // Identificar menor dimensão (Gargalo)
     let lowestDim = null;
     let lowestAvg = 6;
 
@@ -44,6 +46,31 @@ export default function App() {
     const gapDimension = dimensions.find(d => d.id === lowestDim);
 
     return { overallScore, gapDimension };
+  }
+
+  async function finishDiagnostic() {
+    const { overallScore, gapDimension } = calculateResult();
+    setSaving(true);
+
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company: company.company,
+          contact: company.contact,
+          email: company.email,
+          overallScore,
+          gapDimension: gapDimension?.short || "Geral",
+          answers
+        })
+      });
+    } catch (err) {
+      console.error("Erro ao salvar no banco D1:", err);
+    } finally {
+      setSaving(false);
+      setScreen("result");
+    }
   }
 
   return (
@@ -129,16 +156,16 @@ export default function App() {
               </button>
               <button 
                 className="primary-button" 
-                disabled={!answers[currentQuestion.id]} 
+                disabled={!answers[currentQuestion.id] || saving} 
                 onClick={() => {
                   if (current === questions.length - 1) {
-                    setScreen("result");
+                    finishDiagnostic();
                   } else {
                     setCurrent(current + 1);
                   }
                 }}
               >
-                {current === questions.length - 1 ? "Ver Resultado" : "Próxima"}
+                {saving ? "Gerando Diagnóstico..." : (current === questions.length - 1 ? "Ver Resultado" : "Próxima")}
               </button>
             </div>
           </div>
