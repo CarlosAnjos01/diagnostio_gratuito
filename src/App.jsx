@@ -184,8 +184,8 @@ export default function App() {
         {screen === "result" && (() => {
           const { overallScore, dimensionList, primaryGap, topBottlenecks } = calculateResult();
 
-          // Configuração da mensagem dinâmica do WhatsApp do Flávio
-          const flavioPhone = "5511999999999"; // TODO: Substitua pelo número real do Flávio com DDD (ex: 5511988887777)
+          // Número do Flávio configurado
+          const flavioPhone = "5511941517388";
           const companyName = company.company || "Minha Empresa";
           const contactName = company.contact || "Cliente";
 
